@@ -1,7 +1,8 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
-import { deselectToken } from "./../../store/actions/ConfigAction";
+import { deselectToken, deselectRole, deselectUserId } from "./../../store/actions/ConfigAction";
+import axios from 'axios';
 
 
 class AppNavbar extends Component {
@@ -12,22 +13,23 @@ class AppNavbar extends Component {
         };
     }
     
-    componentDidMount() {
-        
-    }
 
     componentDidUpdate(prevprops) {
             if(prevprops.token != this.props.token) {
                 this.setState({
                     isAuthenticated: true
                 });
+                axios.defaults.headers.common['Authorization'] = "Bearer" + " " + this.props.token;
                 return;
             } 
         
     }
 
     onLogoutClick() {
-        this.props.onDeselectToken(this.props.token);
+        deselectToken();
+        deselectUserId();
+        deselectRole();
+        window.location.reload();
     }
 
     render () {
@@ -63,10 +65,18 @@ class AppNavbar extends Component {
                         }
                         {isAuthenticated == true ? (
                             <ul className="navbar-nav ml-auto">
+                                {
+                                    this.props.role == "author" &&
+                                    <li className="nav-item">
+                                        <Link to="/article/post" className="nav-link">
+                                            <i className="fas fa-plus"></i> Create New Article
+                                        </Link>
+                                    </li>
+                                }
                                 <li className="nav-item">
-                                    <a href="!#" className="nav-link">
+                                    <Link to="/profile" className="nav-link">
                                         Profile
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="nav-item">
                                     <Link to="/articles" className="nav-link">
@@ -74,9 +84,9 @@ class AppNavbar extends Component {
                                     </Link>
                                 </li>
                                 <li className="nav-item">
-                                    <a className="nav-link" onClick={this.onLogoutClick}>
+                                    <Link to="/" className="nav-link" onClick={this.onLogoutClick}>
                                         Logout
-                                    </a>
+                                    </Link>
                                 </li>
                             </ul>
 
@@ -104,13 +114,17 @@ class AppNavbar extends Component {
 
 const mapStatestoProps = state => {
     return {
-      token: state.config.token
+      token: state.config.token,
+      id: state.config.id,
+      role: state.config.role
     };
   };
   
   const dispatchToProps = dispatch => {
     return {
-      onDeselectToken: token => dispatch(deselectToken(token))
+      onDeselectToken: token => dispatch(deselectToken(token)),
+      onDeselectId: id => dispatch(deselectUserId(id)),
+      onDeselectRole: role => dispatch(deselectRole(role))
     };
   };
 

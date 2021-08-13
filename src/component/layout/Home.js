@@ -13,10 +13,22 @@ class Home extends Component {
     }
 
     componentDidMount() {
-        console.log("props home", this.props.token)
+        if(this.props.token) {
+            this.getProfileCurrent(this.props.token);
+        }
+    }
+
+    getProfileCurrent(token) {
+        axios.get('https://tc-frontend.sebisedu.co.id/api/user/profile')
+        .then(res => {
+            this.setState({
+                name: res.data.current_user.name
+            });
+        })
     }
 
     render() {
+        
         return (
             <div className="row">
                 <div className="col-md-6 mx-auto">
@@ -33,9 +45,10 @@ class Home extends Component {
 }
 
 const mapStatestoProps = state => {
-    console.log(state)
     return {
-      token: state.config.token
+      token: state.config.token,
+      id: state.config.id,
+      role: state.config.role
     };
   };
   
