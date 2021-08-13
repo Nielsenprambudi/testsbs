@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import { connect } from "react-redux";
-import { addToken } from "./../../store/actions/ConfigAction";
+import { addToken, addUserId, addRole } from "./../../store/actions/ConfigAction";
 import axios from 'axios';
+import { PacmanLoader } from 'react-spinners';
 
 class Login extends Component {
     constructor(props) {
@@ -10,6 +11,7 @@ class Login extends Component {
             identity: "",
             password: "",
             alert: "",
+            alertMsg: "",
             disabled: false
     
         };
@@ -17,22 +19,32 @@ class Login extends Component {
 
     onSubmit = e => {
         e.preventDefault();
-        console.log(this.state)
         this.setState({disabled: true});
         axios.post('https://tc-frontend.sebisedu.co.id/api/auth/login', this.state)
         .then(res => {
-            console.log("state", res.data);
             this.setState({
                 identity: "",
                 password: "",
                 alert: res.data.status,
+                alertMsg: res.data.message,
                 disabled: false
             });
             this.props.onAddToken(res.data.access_token);
+            this.props.onAddUserId(res.data.current_user.id);
+            this.props.onAddRole(res.data.current_user.role);
             axios.defaults.headers.common['Authorization'] = "Bearer" + " " + res.data.access_token;
             this.props.history.push('/');
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            this.setState({
+                alert: err.response.data.status,
+                alertMsg: err.response.data.message,
+                disabled: false
+            })
+
+
+            
+        })
     }
 
     onChange = e => this.setState({[e.target.name]: e.target.value});
@@ -43,13 +55,13 @@ class Login extends Component {
                 <div className="col-md-6 mx-auto">
                     <div className="card">
                         <div className="card-body">
-                            {this.state.alert == "success" ? (
+                            {this.state.alert === "success" ? (
                                 <div className="alert alert-success text-center" role="alert"> 
-                                    Login Success
+                                    {this.state.alertMsg}
                                 </div>)
-                                : this.state.alert == "error" ? 
+                                : this.state.alert === "error" ? 
                                 <div className="alert alert-danger text-center" role="alert" >
-                                    Please check your connection or make sure you input the right username or password
+                                    {this.state.alertMsg}
                                 </div> 
                                 : null
                             }
@@ -78,7 +90,11 @@ class Login extends Component {
                                         value={this.state.password}
                                         onChange={this.onChange} />
                                 </div>
-                                <input type="submit" value="Submit" className="btn btn-primary btn-block" />
+                                {
+                                    this.state.disabled === false ?
+                                    <input type="submit" value="Submit" className="btn btn-primary btn-block" /> :
+                                    <PacmanLoader loading={true} color={'#007bff'} css={'margin: 0 auto; display: block'}/>
+                                }
                             </form>
                         </div>
                     </div>
@@ -89,15 +105,18 @@ class Login extends Component {
 }
 
 const mapStatestoProps = state => {
-    // console.log(state)
     return {
-      token: state.config.token
+      token: state.config.token,
+      id: state.config.id,
+      role: state.config.role
     };
   };
   
   const dispatchToProps = dispatch => {
     return {
-      onAddToken: token => dispatch(addToken(token))
+      onAddToken: token => dispatch(addToken(token)),
+      onAddUserId: userid => dispatch(addUserId(userid)),
+      onAddRole: role => dispatch(addRole(role))
     };
   };
 

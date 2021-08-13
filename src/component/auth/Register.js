@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import { connect } from "react-redux";
 import { addToken } from "./../../store/actions/ConfigAction";
 import axios from 'axios';
+import { PacmanLoader } from 'react-spinners';
 
 class Register extends Component {
     constructor(props) {
@@ -15,7 +16,10 @@ class Register extends Component {
             role: "author",
             avatar_url: "",
             temp_avatar: null,
+            alertImg: "",
+            alertImgMsg: "",
             alert: "",
+            alertMsg: "",
             disabled: false
         };
     }
@@ -40,7 +44,12 @@ class Register extends Component {
                 avatar_url: res.data.data
             });
         })
-        .catch(err => console.log(err))
+        .catch(err => 
+           { this.setState({
+                alertImg: err.response.data.status,
+                alertImgMsg: err.response.data.message
+            })}
+        )
     }
 
     onSubmit = e => {
@@ -50,7 +59,6 @@ class Register extends Component {
         });
         axios.post('https://tc-frontend.sebisedu.co.id/api/auth/register', this.state)
         .then(res => {
-            console.log("res data status", res.data);
             this.setState({
                 email: "",
                 username: "",
@@ -65,7 +73,13 @@ class Register extends Component {
             })
             
         })
-        .catch(err => this.setState({alert: "error"}))
+        .catch(err => 
+            {this.setState({
+                alert: err.response.data.status,
+                alertMsg: err.response.data.message,
+                disabled: false
+            })}
+        )
     }
 
     onChange = e => this.setState({[e.target.name]: e.target.value});
@@ -76,13 +90,23 @@ class Register extends Component {
                 <div className="col-md-6 mx-auto">
                     <div className="card">
                         <div className="card-body">
+                            {this.state.alertImg == "success" ? (
+                                <div className="alert alert-success text-center" role="alert"> 
+                                    {this.state.alertImgMsg}
+                                </div>)
+                                : this.state.alertImg == "error" ? 
+                                <div className="alert alert-danger text-center" role="alert" >
+                                    {this.state.alertImgMsg}
+                                </div> 
+                                : null
+                            }
                             {this.state.alert == "success" ? (
                                 <div className="alert alert-success text-center" role="alert"> 
-                                    Registrations Success
+                                   {this.state.alertMsg}
                                 </div>)
                                 : this.state.alert == "error" ? 
                                 <div className="alert alert-danger text-center" role="alert" >
-                                    Registration Failed
+                                    {this.state.alertMsg}
                                 </div> 
                                 : null
                             }
@@ -165,7 +189,11 @@ class Register extends Component {
                                         <option value="visitor">Visitor</option>
                                     </select>
                                 </div>
-                                <input type="submit" value="Submit" disabled={this.state.disabled} className="btn btn-primary btn-block" />
+                                {
+                                    this.state.disabled === false ?
+                                    <input type="submit" value="Submit" className="btn btn-primary btn-block" /> :
+                                    <PacmanLoader loading={true} color={'#007bff'} css={'margin: 0 auto; display: block'}/>
+                                }
                             </form>
                         </div>
                     </div>
@@ -176,9 +204,10 @@ class Register extends Component {
 }
 
 const mapStatestoProps = state => {
-    console.log(state)
     return {
-      token: state.config.token
+      token: state.config.token,
+      id: state.config.id,
+      role: state.config.role
     };
   };
   
